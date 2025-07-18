@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Cuisine Meal Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #FFF9E6, #FFE082);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: color 0.3s, transform 0.3s;
+        }
+        nav a:hover {
+            color: #FFB300;
+            transform: scale(1.1);
+        }
+        .hero {
+            height: 50vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #333;
+        }
+        .hero h1 {
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .hero p {
+            font-size: 18px;
+            max-width: 600px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        main {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .calculator, .meal-plan {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.4);
+            color: #333;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: #FFB300;
+            transform: scale(1.02);
+            outline: none;
+        }
+        input::placeholder {
+            color: rgba(51, 51, 51, 0.6);
+        }
+        .input-container i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #333;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #FFECB3, #FFB300);
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: none;
+            color: #333;
+        }
+        .meal-plan {
+            display: none;
+        }
+        .meal-plan.active {
+            display: block;
+        }
+        .toggle-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #FFECB3, #FFB300);
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .toggle-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .meal-plan-content {
+            display: none;
+        }
+        .meal-plan-content.active {
+            display: block;
+        }
+        .dish {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #333;
+        }
+        .dish h4 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .dish .portions {
+            margin-top: 5px;
+            font-style: italic;
+            color: rgba(51, 51, 51, 0.8);
+        }
+        .comparison-chart {
+            margin: 20px 0;
+            max-width: 100%;
+            height: 300px;
+        }
+        .summary {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="#calculator">Calculator</a></li>
+            <li><a href="#cuisines">Cuisines</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <h1>Personalized Meal Planner</h1>
+        <p>Enter your details to calculate your nutritional needs and explore tailored meal plans with portion sizes.</p>
+    </section>
+
+    <main>
+        <section id="calculator">
+            <h2>Calculate Your Nutritional Needs</h2>
+            <div class="calculator">
+                <label for="height">Height (cm):</label>
+                <div class="input-container">
+                    <i class="fas fa-ruler"></i>
+                    <input type="number" id="height" placeholder="e.g., 170" required>
+                </div>
+
+                <label for="weight">Weight (kg):</label>
+                <div class="input-container">
+                    <i class="fas fa-weight-scale"></i>
+                    <input type="number" id="weight" placeholder="e.g., 70" required>
+                </div>
+
+                <label for="age">Age (years):</label>
+                <div class="input-container">
+                    <i class="fas fa-calendar"></i>
+                    <input type="number" id="age" placeholder="e.g., 30" required>
+                </div>
+
+                <label for="gender">Gender:</label>
+                <div class="input-container">
+                    <i class="fas fa-user"></i>
+                    <select id="gender" required>
+                        <option value="" disabled selected>Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+
+                <button onclick="calculateNutrients()">Calculate & Show Cuisines</button>
+
+                <div id="result">
+                    <h3>Your Daily Needs</h3>
+                    <p id="calories"></p>
+                    <p id="protein"></p>
+                    <p id="carbs"></p>
+                    <p id="fats"></p>
+                    <p id="water"></p>
+                    <p id="fiber"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="cuisines">
+            <h2>Choose Your Cuisine</h2>
+            <div id="malay" class="meal-plan">
+                <button class="toggle-btn" onclick="toggleMealPlan('malay-plan')">Malay Cuisine</button>
+                <div id="malay-plan" class="meal-plan-content">
+                    <div class="dish">
+                        <h4>Breakfast: Nasi Lemak</h4>
+                        <p>Coconut rice, boiled egg, peanuts, sambal, cucumber.</p>
+                        <p class="portions">Portions: <span class="portion portion-rice-0">150</span>g rice, <span class="portion portion-egg-0">1</span> egg, <span class="portion portion-peanuts-0">15</span>g peanuts, <span class="portion portion-sambal-0">20</span>g sambal, <span class="portion portion-cucumber-0">30</span>g cucumber</p>
+                        <p>Calories: <span class="portion portion-calories">450</span> kcal | Protein: <span class="portion portion-protein">12</span> g | Carbs: <span class="portion portion-carbs">55</span> g | Fat: <span class="portion portion-fat">20</span> g | Fiber: <span class="portion portion-fiber">2</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Lunch: Ikan Bakar with Rice</h4>
+                        <p>Grilled ikan kembung, rice, ulam, sambal belacan.</p>
+                        <p class="portions">Portions: <span class="portion portion-fish-1">120</span>g fish, <span class="portion portion-rice-1">150</span>g rice, <span class="portion portion-ulam-1">40</span>g ulam, <span class="portion portion-sambal-1">20</span>g sambal belacan</p>
+                        <p>Calories: <span class="portion portion-calories">500</span> kcal | Protein: <span class="portion portion-protein">30</span> g | Carbs: <span class="portion portion-carbs">50</span> g | Fat: <span class="portion portion-fat">15</span> g | Fiber: <span class="portion portion-fiber">3</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Dinner: Ayam Rendang</h4>
+                        <p>Spiced coconut chicken, rice, mixed vegetables.</p>
+                        <p class="portions">Portions: <span class="portion portion-chicken-2">120</span>g chicken, <span class="portion portion-rice-2">150</span>g rice, <span class="portion portion-vegetables-2">50</span>g mixed vegetables</p>
+                        <p>Calories: <span class="portion portion-calories">550</span> kcal | Protein: <span class="portion portion-protein">28</span> g | Carbs: <span class="portion portion-carbs">50</span> g | Fat: <span class="portion portion-fat">22</span> g | Fiber: <span class="portion portion-fiber">3</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Snack: Kuih Lapis</h4>
+                        <p>Layered steamed cake.</p>
+                        <p class="portions">Portions: <span class="portion portion-kuih-3">80</span>g</p>
+                        <p>Calories: <span class="portion portion-calories">200</span> kcal | Protein: <span class="portion portion-protein">3</span> g | Carbs: <span class="portion portion-carbs">35</span> g | Fat: <span class="portion portion-fat">6</span> g | Fiber: <span class="portion portion-fiber">1</span> g</p>
+                    </div>
+                    <canvas id="malay-comparison-chart" class="comparison-chart"></canvas>
+                    <div class="summary">
+                        <h4>Total (Adjusted)</h4>
+                        <p id="malay-calories"></p>
+                        <p id="malay-protein"></p>
+                        <p id="malay-carbs"></p>
+                        <p id="malay-fats"></p>
+                        <p id="malay-fiber"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="chinese" class="meal-plan">
+                <button class="toggle-btn" onclick="toggleMealPlan('chinese-plan')">Chinese Cuisine</button>
+                <div id="chinese-plan" class="meal-plan-content">
+                    <div class="dish">
+                        <h4>Breakfast: Congee with Century Egg</h4>
+                        <p>Rice porridge, century egg, ginger, scallions.</p>
+                        <p class="portions">Portions: <span class="portion portion-congee-0">300</span>g congee, <span class="portion portion-egg-0">1</span> century egg, <span class="portion portion-ginger-0">5</span>g ginger, <span class="portion portion-scallions-0">10</span>g scallions</p>
+                        <p>Calories: <span class="portion portion-calories">200</span> kcal | Protein: <span class="portion portion-protein">10</span> g | Carbs: <span class="portion portion-carbs">30</span> g | Fat: <span class="portion portion-fat">5</span> g | Fiber: <span class="portion portion-fiber">1</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Lunch: Hainanese Chicken Rice</h4>
+                        <p>Poached chicken, fragrant rice, cucumber, chili sauce.</p>
+                        <p class="portions">Portions: <span class="portion portion-chicken-1">150</span>g chicken, <span class="portion portion-rice-1">150</span>g rice, <span class="portion portion-cucumber-1">50</span>g cucumber, <span class="portion portion-chili-1">20</span>g chili sauce</p>
+                        <p>Calories: <span class="portion portion-calories">600</span> kcal | Protein: <span class="portion portion-protein">30</span> g | Carbs: <span class="portion portion-carbs">60</span> g | Fat: <span class="portion portion-fat">20</span> g | Fiber: <span class="portion portion-fiber">2</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Dinner: Steamed Fish</h4>
+                        <p>Steamed tilapia, soy sauce, ginger, rice.</p>
+                        <p class="portions">Portions: <span class="portion portion-fish-2">150</span>g fish, <span class="portion portion-soy-2">20</span>g soy sauce, <span class="portion portion-ginger-2">5</span>g ginger, <span class="portion portion-rice-2">150</span>g rice</p>
+                        <p>Calories: <span class="portion portion-calories">400</span> kcal | Protein: <span class="portion portion-protein">35</span> g | Carbs: <span class="portion portion-carbs">45</span> g | Fat: <span class="portion portion-fat">8</span> g | Fiber: <span class="portion portion-fiber">1</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Snack: Dragon Fruit</h4>
+                        <p>Fresh dragon fruit slices.</p>
+                        <p class="portions">Portions: <span class="portion portion-dragonfruit-3">200</span>g</p>
+                        <p>Calories: <span class="portion portion-calories">120</span> kcal | Protein: <span class="portion portion-protein">2</span> g | Carbs: <span class="portion portion-carbs">29</span> g | Fat: <span class="portion portion-fat">0.5</span> g | Fiber: <span class="portion portion-fiber">3</span> g</p>
+                    </div>
+                    <div class="summary">
+                        <h4>Total (Adjusted)</h4>
+                        <p id="chinese-calories"></p>
+                        <p id="chinese-protein"></p>
+                        <p id="chinese-carbs"></p>
+                        <p id="chinese-fats"></p>
+                        <p id="chinese-fiber"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="indian" class="meal-plan">
+                <button class="toggle-btn" onclick="toggleMealPlan('indian-plan')">Indian Cuisine</button>
+                <div id="indian-plan" class="meal-plan-content">
+                    <div class="dish">
+                        <h4>Breakfast: Idli with Sambar</h4>
+                        <p>Steamed rice cakes, lentil sambar, coconut chutney.</p>
+                        <p class="portions">Portions: <span class="portion portion-idlis-0">4</span> idlis (~120g), <span class="portion portion-sambar-0">150</span>g sambar, <span class="portion portion-chutney-0">30</span>g chutney</p>
+                        <p>Calories: <span class="portion portion-calories">350</span> kcal | Protein: <span class="portion portion-protein">12</span> g | Carbs: <span class="portion portion-carbs">60</span> g | Fat: <span class="portion portion-fat">6</span> g | Fiber: <span class="portion portion-fiber">5</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Lunch: Chicken Biryani</h4>
+                        <p>Spiced rice, chicken, raita, cucumber.</p>
+                        <p class="portions">Portions: <span class="portion portion-rice-1">200</span>g rice, <span class="portion portion-chicken-1">100</span>g chicken, <span class="portion portion-raita-1">50</span>g raita, <span class="portion portion-cucumber-1">50</span>g cucumber</p>
+                        <p>Calories: <span class="portion portion-calories">700</span> kcal | Protein: <span class="portion portion-protein">35</span> g | Carbs: <span class="portion portion-carbs">80</span> g | Fat: <span class="portion portion-fat">25</span> g | Fiber: <span class="portion portion-fiber">4</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Dinner: Tandoori Chicken</h4>
+                        <p>Grilled chicken, rotis, vegetable curry.</p>
+                        <p class="portions">Portions: <span class="portion portion-chicken-2">150</span>g chicken, <span class="portion portion-rotis-2">2</span> rotis (~80g), <span class="portion portion-curry-2">100</span>g vegetable curry</p>
+                        <p>Calories: <span class="portion portion-calories">550</span> kcal | Protein: <span class="portion portion-protein">35</span> g | Carbs: <span class="portion portion-carbs">50</span> g | Fat: <span class="portion portion-fat">20</span> g | Fiber: <span class="portion portion-fiber">6</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Snack: Guava</h4>
+                        <p>Fresh guava slices.</p>
+                        <p class="portions">Portions: <span class="portion portion-guava-3">150</span>g</p>
+                        <p>Calories: <span class="portion portion-calories">100</span> kcal | Protein: <span class="portion portion-protein">2</span> g | Carbs: <span class="portion portion-carbs">22</span> g | Fat: <span class="portion portion-fat">1</span> g | Fiber: <span class="portion portion-fiber">8</span> g</p>
+                    </div>
+                    <div class="summary">
+                        <h4>Total (Adjusted)</h4>
+                        <p id="indian-calories"></p>
+                        <p id="indian-protein"></p>
+                        <p id="indian-carbs"></p>
+                        <p id="indian-fats"></p>
+                        <p id="indian-fiber"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="western" class="meal-plan">
+                <button class="toggle-btn" onclick="toggleMealPlan('western-plan')">Western Cuisine</button>
+                <div id="western-plan" class="meal-plan-content">
+                    <div class="dish">
+                        <h4>Breakfast: Oatmeal with Berries</h4>
+                        <p>Oats, mixed berries, chia seeds, skim milk.</p>
+                        <p class="portions">Portions: <span class="portion portion-oats-0">50</span>g oats, <span class="portion portion-berries-0">100</span>g berries, <span class="portion portion-chia-0">10</span>g chia seeds, <span class="portion portion-milk-0">150</span>ml skim milk</p>
+                        <p>Calories: <span class="portion portion-calories">350</span> kcal | Protein: <span class="portion portion-protein">12</span> g | Carbs: <span class="portion portion-carbs">55</span> g | Fat: <span class="portion portion-fat">8</span> g | Fiber: <span class="portion portion-fiber">10</span> g</p>
+                    </div>
+                    <div class-Dinner: Grilled Salmon</h4>
+                        <p>Salmon, quinoa, steamed broccoli.</p>
+                        <p class="portions">Portions: <span class="portion portion-salmon-2">150</span>g salmon, <span class="portion portion-quinoa-2">100</span>g quinoa, <span class="portion portion-broccoli-2">100</span>g broccoli</p>
+                        <p>Calories: <span class="portion portion-calories">600</span> kcal | Protein: <span class="portion portion-protein">40</span> g | Carbs: <span class="portion portion-carbs">40</span> g | Fat: <span class="portion portion-fat">25</span> g | Fiber: <span class="portion portion-fiber">6</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Snack: Greek Yogurt</h4>
+                        <p>Plain yogurt with honey drizzle.</p>
+                        <p class="portions">Portions: <span class="portion portion-yogurt-3">150</span>g yogurt, <span class="portion portion-honey-3">10</span>g honey</p>
+                        <p>Calories: <span class="portion portion-calories">150</span> kcal | Protein: <span class="portion portion-protein">10</span> g | Carbs: <span class="portion portion-carbs">15</span> g | Fat: <span class="portion portion-fat">5</span> g | Fiber: <span class="portion portion-fiber">0</span> g</p>
+                    </div>
+                    <div class="summary">
+                        <h4>Total (Adjusted)</h4>
+                        <p id="western-calories"></p>
+                        <p id="western-protein"></p>
+                        <p id="western-carbs"></p>
+                        <p id="western-fats"></p>
+                        <p id="western-fiber"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="japanese" class="meal-plan">
+                <button class="toggle-btn" onclick="toggleMealPlan('japanese-plan')">Japanese Cuisine</button>
+                <div id="japanese-plan" class="meal-plan-content">
+                    <div class="dish">
+                        <h4>Breakfast: Miso Soup</h4>
+                        <p>Miso broth, tofu, seaweed, scallions.</p>
+                        <p class="portions">Portions: <span class="portion portion-broth-0">250</span>ml broth, <span class="portion portion-tofu-0">50</span>g tofu, <span class="portion portion-seaweed-0">10</span>g seaweed, <span class="portion portion-scallions-0">10</span>g scallions</p>
+                        <p>Calories: <span class="portion portion-calories">80</span> kcal | Protein: <span class="portion portion-protein">6</span> g | Carbs: <span class="portion portion-carbs">8</span> g | Fat: <span class="portion portion-fat">3</span> g | Fiber: <span class="portion portion-fiber">2</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Lunch: Chicken Teriyaki</h4>
+                        <p>Teriyaki chicken, rice, edamame.</p>
+                        <p class="portions">Portions: <span class="portion portion-chicken-1">150</span>g chicken, <span class="portion portion-rice-1">150</span>g rice, <span class="portion portion-edamame-1">50</span>g edamame</p>
+                        <p>Calories: <span class="portion portion-calories">650</span> kcal | Protein: <span class="portion portion-protein">35</span> g | Carbs: <span class="portion portion-carbs">70</span> g | Fat: <span class="portion portion-fat">15</span> g | Fiber: <span class="portion portion-fiber">6</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Dinner: Sushi Platter</h4>
+                        <p>Salmon, tuna nigiri, rice, miso soup.</p>
+                        <p class="portions">Portions: <span class="portion portion-fish-2">8</span> pieces (~100g fish), <span class="portion portion-rice-2">100</span>g rice, <span class="portion portion-soup-2">150</span>ml miso soup</p>
+                        <p>Calories: <span class="portion portion-calories">500</span> kcal | Protein: <span class="portion portion-protein">30</span> g | Carbs: <span class="portion portion-carbs">60</span> g | Fat: <span class="portion portion-fat">10</span> g | Fiber: <span class="portion portion-fiber">2</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Snack: Persimmon</h4>
+                        <p>Fresh persimmon slices.</p>
+                        <p class="portions">Portions: <span class="portion portion-persimmon-3">150</span>g</p>
+                        <p>Calories: <span class="portion portion-calories">100</span> kcal | Protein: <span class="portion portion-protein">1</span> g | Carbs: <span class="portion portion-carbs">25</span> g | Fat: <span class="portion portion-fat">0.3</span> g | Fiber: <span class="portion portion-fiber">5</span> g</p>
+                    </div>
+                    <div class="summary">
+                        <h4>Total (Adjusted)</h4>
+                        <p id="japanese-calories"></p>
+                        <p id="japanese-protein"></p>
+                        <p id="japanese-carbs"></p>
+                        <p id="japanese-fats"></p>
+                        <p id="japanese-fiber"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="korean" class="meal-plan">
+                <button class="toggle-btn" onclick="toggleMealPlan('korean-plan')">Korean Cuisine</button>
+                <div id="korean-plan" class="meal-plan-content">
+                    <div class="dish">
+                        <h4>Breakfast: Kimchi Fried Rice</h4>
+                        <p>Fried rice, kimchi, egg, sesame seeds.</p>
+                        <p class="portions">Portions: <span class="portion portion-rice-0">150</span>g rice, <span class="portion portion-kimchi-0">50</span>g kimchi, <span class="portion portion-egg-0">1</span> egg, <span class="portion portion-sesame-0">5</span>g sesame seeds</p>
+                        <p>Calories: <span class="portion portion-calories">400</span> kcal | Protein: <span class="portion portion-protein">12</span> g | Carbs: <span class="portion portion-carbs">50</span> g | Fat: <span class="portion portion-fat">15</span> g | Fiber: <span class="portion portion-fiber">3</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Lunch: Bibimbap</h4>
+                        <p>Mixed rice, beef, vegetables, gochujang, egg.</p>
+                        <p class="portions">Portions: <span class="portion portion-rice-1">150</span>g rice, <span class="portion portion-beef-1">100</span>g beef, <span class="portion portion-vegetables-1">100</span>g vegetables, <span class="portion portion-gochujang-1">20</span>g gochujang, <span class="portion portion-egg-1">1</span> egg</p>
+                        <p>Calories: <span class="portion portion-calories">650</span> kcal | Protein: <span class="portion portion-protein">30</span> g | Carbs: <span class="portion portion-carbs">70</span> g | Fat: <span class="portion portion-fat">20</span> g | Fiber: <span class="portion portion-fiber">6</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Dinner: Bulgogi</h4>
+                        <p>Marinated beef, rice, spinach namul.</p>
+                        <p class="portions">Portions: <span class="portion portion-beef-2">150</span>g beef, <span class="portion portion-rice-2">150</span>g rice, <span class="portion portion-spinach-2">50</span>g spinach namul</p>
+                        <p>Calories: <span class="portion portion-calories">600</span> kcal | Protein: <span class="portion portion-protein">35</span> g | Carbs: <span class="portion portion-carbs">50</span> g | Fat: <span class="portion portion-fat">22</span> g | Fiber: <span class="portion portion-fiber">3</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Snack: Tteokbokki</h4>
+                        <p>Spicy rice cakes.</p>
+                        <p class="portions">Portions: <span class="portion portion-tteokbokki-3">100</span>g</p>
+                        <p>Calories: <span class="portion portion-calories">200</span> kcal | Protein: <span class="portion portion-protein">3</span> g | Carbs: <span class="portion portion-carbs">40</span> g | Fat: <span class="portion portion-fat">2</span> g | Fiber: <span class="portion portion-fiber">1</span> g</p>
+                    </div>
+                    <div class="summary">
+                        <h4>Total (Adjusted)</h4>
+                        <p id="korean-calories"></p>
+                        <p id="korean-protein"></p>
+                        <p id="korean-carbs"></p>
+                        <p id="korean-fats"></p>
+                        <p id="korean-fiber"></p>
+                    </div>
+                </div>
+            </div>
+            <div id="thai" class="meal-plan">
+                <button class="toggle-btn" onclick="toggleMealPlan('thai-plan')">Thai Cuisine</button>
+                <div id="thai-plan" class="meal-plan-content">
+                    <div class="dish">
+                        <h4>Breakfast: Khao Tom</h4>
+                        <p>Rice porridge, shrimp, ginger, cilantro.</p>
+                        <p class="portions">Portions: <span class="portion portion-porridge-0">300</span>g porridge, <span class="portion portion-shrimp-0">50</span>g shrimp, <span class="portion portion-ginger-0">5</span>g ginger, <span class="portion portion-cilantro-0">5</span>g cilantro</p>
+                        <p>Calories: <span class="portion portion-calories">250</span> kcal | Protein: <span class="portion portion-protein">15</span> g | Carbs: <span class="portion portion-carbs">35</span> g | Fat: <span class="portion portion-fat">5</span> g | Fiber: <span class="portion portion-fiber">1</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Lunch: Pad Thai</h4>
+                        <p>Rice noodles, chicken, peanuts, bean sprouts.</p>
+                        <p class="portions">Portions: <span class="portion portion-noodles-1">150</span>g noodles, <span class="portion portion-chicken-1">100</span>g chicken, <span class="portion portion-peanuts-1">20</span>g peanuts, <span class="portion portion-sprouts-1">50</span>g bean sprouts</p>
+                        <p>Calories: <span class="portion portion-calories">600</span> kcal | Protein: <span class="portion portion-protein">30</span> g | Carbs: <span class="portion portion-carbs">70</span> g | Fat: <span class="portion portion-fat">20</span> g | Fiber: <span class="portion portion-fiber">4</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Dinner: Green Curry</h4>
+                        <p>Chicken curry, jasmine rice.</p>
+                        <p class="portions">Portions: <span class="portion portion-curry-1">150</span>g chicken curry, <span class="portion portion-rice-2">150</span>g jasmine rice</p>
+                        <p>Calories: <span class="portion portion-calories">650</span> kcal | Protein: <span class="portion portion-protein">30</span> g | Carbs: <span class="portion portion-carbs">55</span> g | Fat: <span class="portion portion-fat">30</span> g | Fiber: <span class="portion portion-fiber">3</span> g</p>
+                    </div>
+                    <div class="dish">
+                        <h4>Snack: Mango Sticky Rice</h4>
+                        <p>Sticky rice, coconut milk, mango.</p>
+                        <p class="portions">Portions: <span class="portion portion-rice-3">100</span>g rice, <span class="portion portion-mango-3">50</span>g mango, <span class="portion portion-coconut-3">30</span>ml coconut milk</p>
+                        <p>Calories: <span class="portion portion-calories">300</span> kcal | Protein: <span class="portion portion-protein">4</span> g | Carbs: <span class="portion portion-carbs">50</span> g | Fat: <span class="portion portion-fat">10</span> g | Fiber: <span class="portion portion-fiber">2</span> g</p>
+                    </div>
+                    <div class="summary">
+                        <h4>Total (Adjusted)</h4>
+                        <p id="thai-calories"></p>
+                        <p id="thai-protein"></p>
+                        <p id="thai-carbs"></p>
+                        <p id="thai-fats"></p>
+                        <p id="thai-fiber"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Store chart instance
+        let malayComparisonChart = null;
+
+        function createOrUpdateChart(canvasId, nutritionData) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (malayComparisonChart) {
+                malayComparisonChart.destroy();
+            }
+
+            // Create new chart
+            malayComparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Nasi Lemak', 'Ikan Bakar', 'Ayam Rendang', 'Kuih Lapis'],
+                    datasets: [
+                        {
+                            label: 'Protein (g)',
+                            data: nutritionData.map(d => d.protein),
+                            backgroundColor: 'rgba(255, 183, 77, 0.6)',
+                            borderColor: 'rgba(255, 183, 77, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Carbs (g)',
+                            data: nutritionData.map(d => d.carbs),
+                            backgroundColor: 'rgba(129, 199, 132, 0.6)',
+                            borderColor: 'rgba(129, 199, 132, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Fat (g)',
+                            data: nutritionData.map(d => d.fat),
+                            backgroundColor: 'rgba(244, 67, 54, 0.6)',
+                            borderColor: 'rgba(244, 67, 54, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Fiber (g)',
+                            data: nutritionData.map(d => d.fiber),
+                            backgroundColor: 'rgba(100, 181, 246, 0.6)',
+                            borderColor: 'rgba(100, 181, 246, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Grams',
+                                color: '#333'
+                            },
+                            ticks: {
+                                color: '#333'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.2)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#333'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#333',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                            titleColor: '#333',
+                            bodyColor: '#333',
+                            borderColor: '#FFB300',
+                            borderWidth: 1
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    barPercentage: 0.22, // Adjust bar width to fit four datasets
+                    categoryPercentage: 0.9 // Space between categories
+                }
+            });
+        }
+
+        function calculateNutrients() {
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const age = parseInt(document.getElementById('age').value);
+            const gender = document.getElementById('gender').value;
+
+            if (isNaN(height) || isNaN(weight) || isNaN(age) || !gender) {
+                alert('Please fill in all fields with valid values.');
+                return;
+            }
+
+            // Mifflin-St Jeor Equation for BMR
+            let bmr;
+            if (gender === 'male') {
+                bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+            } else {
+                bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+            }
+
+            // TDEE (moderate activity, 1.55 multiplier)
+            const tdee = bmr * 1.55;
+            const protein = (tdee * 0.2) / 4; // 20% of calories, 4 kcal/g
+            const carbs = (tdee * 0.5) / 4; // 50% of calories, 4 kcal/g
+            const fats = (tdee * 0.3) / 9; // 30% of calories, 9 kcal/g
+            const water = weight * 35; // 35 ml/kg
+            const fiber = (tdee / 1000) * 14; // 14 g/1000 kcal
+
+            // Display results
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('calories').textContent = `Calories: ${Math.round(tdee)} kcal`;
+            document.getElementById('protein').textContent = `Protein: ${Math.round(protein)} g`;
+            document.getElementById('carbs').textContent = `Carbohydrates: ${Math.round(carbs)} g`;
+            document.getElementById('fats').textContent = `Fats: ${Math.round(fats)} g`;
+            document.getElementById('water').textContent = `Water: ${Math.round(water)} ml`;
+            document.getElementById('fiber').textContent = `Fiber: ${Math.round(fiber)} g`;
+
+            // Show cuisine section
+            document.querySelectorAll('.meal-plan').forEach(plan => plan.classList.add('active'));
+            adjustMealPlans(tdee, protein, carbs, fats, fiber);
+        }
+
+        function toggleMealPlan(planId) {
+            const plan = document.getElementById(planId);
+            const isActive = plan.classList.contains('active');
+            document.querySelectorAll('.meal-plan-content').forEach(content => content.classList.remove('active'));
+            if (!isActive) {
+                plan.classList.add('active');
+            }
+        }
+
+        function adjustMealPlans(targetCalories, targetProtein, targetCarbs, targetFats, targetFiber) {
+            const cuisines = [
+                {
+                    id: 'malay',
+                    base: { calories: 1700, protein: 73, carbs: 190, fats: 63, fiber: 9 },
+                    portionIds: [
+                        ['rice-0', 'egg-0', 'peanuts-0', 'sambal-0', 'cucumber-0'],
+                        ['fish-1', 'rice-1', 'ulam-1', 'sambal-1'],
+                        ['chicken-2', 'rice-2', 'vegetables-2'],
+                        ['kuih-3']
+                    ],
+                    baseNutrition: [
+                        { protein: 12, carbs: 55, fat: 20, fiber: 2 },
+                        { protein: 30, carbs: 50, fat: 15, fiber: 3 },
+                        { protein: 28, carbs: 50, fat: 22, fiber: 3 },
+                        { protein: 3, carbs: 35, fat: 6, fiber: 1 }
+                    ]
+                },
+                {
+                    id: 'chinese',
+                    base: { calories: 1320, protein: 77, carbs: 164, fats: 33.5, fiber: 7 },
+                    portionIds: [
+                        ['congee-0', 'egg-0', 'ginger-0', 'scallions-0'],
+                        ['chicken-1', 'rice-1', 'cucumber-1', 'chili-1'],
+                        ['fish-2', 'soy-2', 'ginger-2', 'rice-2'],
+                        ['dragonfruit-3']
+                    ]
+                },
+                {
+                    id: 'indian',
+                    base: { calories: 1700, protein: 84, carbs: 212, fats: 52, fiber: 23 },
+                    portionIds: [
+                        ['idlis-0', 'sambar-0', 'chutney-0'],
+                        ['rice-1', 'chicken-1', 'raita-1', 'cucumber-1'],
+                        ['chicken-2', 'rotis-2', 'curry-2'],
+                        ['guava-3']
+                    ]
+                },
+                {
+                    id: 'western',
+                    base: { calories: 1600, protein: 97, carbs: 130, fats: 68, fiber: 24 },
+                    portionIds: [
+                        ['oats-0', 'berries-0', 'chia-0', 'milk-0'],
+                        ['chicken-1', 'greens-1', 'avocado-1', 'dressing-1'],
+                        ['salmon-2', 'quinoa-2', 'broccoli-2'],
+                        ['yogurt-3', 'honey-3']
+                    ]
+                },
+                {
+                    id: 'japanese',
+                    base: { calories: 1330, protein: 72, carbs: 163, fats: 28.3, fiber: 15 },
+                    portionIds: [
+                        ['broth-0', 'tofu-0', 'seaweed-0', 'scallions-0'],
+                        ['chicken-1', 'rice-1', 'edamame-1'],
+                        ['fish-2', 'rice-2', 'soup-2'],
+                        ['persimmon-3']
+                    ]
+                },
+                {
+                    id: 'korean',
+                    base: { calories: 1850, protein: 80, carbs: 210, fats: 59, fiber: 13 },
+                    portionIds: [
+                        ['rice-0', 'kimchi-0', 'egg-0', 'sesame-0'],
+                        ['rice-1', 'beef-1', 'vegetables-1', 'gochujang-1', 'egg-1'],
+                        ['beef-2', 'rice-2', 'spinach-2'],
+                        ['tteokbokki-3']
+                    ]
+                },
+                {
+                    id: 'thai',
+                    base: { calories: 1800, protein: 79, carbs: 210, fats: 65, fiber: 10 },
+                    portionIds: [
+                        ['porridge-0', 'shrimp-0', 'ginger-0', 'cilantro-0'],
+                        ['noodles-1', 'chicken-1', 'peanuts-1', 'sprouts-1'],
+                        ['curry-1', 'rice-2'],
+                        ['rice-3', 'mango-3', 'coconut-3']
+                    ]
+                }
+            ];
+
+            cuisines.forEach(cuisine => {
+                const scale = targetCalories / cuisine.base.calories;
+                const adjusted = {
+                    calories: Math.round(cuisine.base.calories * scale),
+                    protein: Math.round(cuisine.base.protein * scale),
+                    carbs: Math.round(cuisine.base.carbs * scale),
+                    fats: Math.round(cuisine.base.fats * scale),
+                    fiber: Math.round(cuisine.base.fiber * scale)
+                };
+
+                // Update portion sizes
+                cuisine.portionIds.forEach((dishPortions, dishIndex) => {
+                    dishPortions.forEach((portionId, portionIndex) => {
+                        const el = document.querySelector(`#${cuisine.id} .dish:nth-child(${dishIndex + 1}) .portion-${portionId}`);
+                        if (el) {
+                            const baseValue = parseFloat(el.textContent);
+                            el.textContent = Math.round(baseValue * scale * 10) / 10;
+                        }
+                    });
+                });
+
+                // Update nutritional values and chart for Malay cuisine
+                if (cuisine.id === 'malay') {
+                    const scaledNutrition = cuisine.baseNutrition.map(nutrition => ({
+                        protein: Math.round(nutrition.protein * scale),
+                        carbs: Math.round(nutrition.carbs * scale),
+                        fat: Math.round(nutrition.fat * scale),
+                        fiber: Math.round(nutrition.fiber * scale)
+                    }));
+
+                    // Update text values
+                    cuisine.baseNutrition.forEach((nutrition, index) => {
+                        document.querySelector(`#${cuisine.id} .dish:nth-child(${index + 1}) .portion-calories`).textContent = Math.round(parseFloat(document.querySelector(`#${cuisine.id} .dish:nth-child(${index + 1}) .portion-calories`).textContent) * scale);
+                        document.querySelector(`#${cuisine.id} .dish:nth-child(${index + 1}) .portion-protein`).textContent = scaledNutrition[index].protein;
+                        document.querySelector(`#${cuisine.id} .dish:nth-child(${index + 1}) .portion-carbs`).textContent = scaledNutrition[index].carbs;
+                        document.querySelector(`#${cuisine.id} .dish:nth-child(${index + 1}) .portion-fat`).textContent = scaledNutrition[index].fat;
+                        document.querySelector(`#${cuisine.id} .dish:nth-child(${index + 1}) .portion-fiber`).textContent = scaledNutrition[index].fiber;
+                    });
+
+                    // Update comparison chart
+                    createOrUpdateChart('malay-comparison-chart', scaledNutrition);
+                } else {
+                    // Update text values for other cuisines
+                    document.querySelectorAll(`#${cuisine.id} .portion-calories`).forEach((el) => {
+                        const baseValue = parseFloat(el.textContent);
+                        el.textContent = Math.round(baseValue * scale);
+                    });
+                    document.querySelectorAll(`#${cuisine.id} .portion-protein`).forEach((el) => {
+                        const baseValue = parseFloat(el.textContent);
+                        el.textContent = Math.round(baseValue * scale);
+                    });
+                    document.querySelectorAll(`#${cuisine.id} .portion-carbs`).forEach((el) => {
+                        const baseValue = parseFloat(el.textContent);
+                        el.textContent = Math.round(baseValue * scale);
+                    });
+                    document.querySelectorAll(`#${cuisine.id} .portion-fat`).forEach((el) => {
+                        const baseValue = parseFloat(el.textContent);
+                        el.textContent = Math.round(baseValue * scale);
+                    });
+                    document.querySelectorAll(`#${cuisine.id} .portion-fiber`).forEach((el) => {
+                        const baseValue = parseFloat(el.textContent);
+                        el.textContent = Math.round(baseValue * scale);
+                    });
+                }
+
+                // Update summary
+                document.getElementById(`${cuisine.id}-calories`).textContent = `Calories: ${adjusted.calories} kcal`;
+                document.getElementById(`${cuisine.id}-protein`).textContent = `Protein: ${adjusted.protein} g`;
+                document.getElementById(`${cuisine.id}-carbs`).textContent = `Carbohydrates: ${adjusted.carbs} g`;
+                document.getElementById(`${cuisine.id}-fats`).textContent = `Fats: ${adjusted.fats} g`;
+                document.getElementById(`${cuisine.id}-fiber`).textContent = `Fiber: ${adjusted.fiber} g`;
+            });
+        }
+
+        // Initialize chart with base values
+        window.onload = () => {
+            const baseNutrition = [
+                { protein: 12, carbs: 55, fat: 20, fiber: 2 },
+                { protein: 30, carbs: 50, fat: 15, fiber: 3 },
+                { protein: 28, carbs: 50, fat: 22, fiber: 3 },
+                { protein: 3, carbs: 35, fat: 6, fiber: 1 }
+            ];
+            createOrUpdateChart('malay-comparison-chart', baseNutrition);
+        };
+    </script>
